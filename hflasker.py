@@ -15,8 +15,8 @@ app.config.from_object(__name__)
 app.config.update(dict(
 	DATABASE=os.path.join(app.root_path, 'hflaskr.db'),
 	SECRET_KEY='\x00\xd8h(Z\x17\x8d\xb5\x97l\x88x0\xf2\xb3\xdcfU\xdb\x1f\x8d\x0b\xafk',
-	USERNAME='hehao',
-	PASSWORD='bfb129172dd48786cd30a212c976a33dcaf83ad6'
+	USERNAME='',
+	PASSWORD=''
 	)
 )
 app.config.from_envvar('HFLASKR_SETTINGS', silent=True)
