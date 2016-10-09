@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 # all the imports
 import os
 import sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
 	render_template, flash
+import hashlib
+from datetime import datetime
 
 # create our little application :)
 app = Flask(__name__)
@@ -11,9 +14,9 @@ app.config.from_object(__name__)
 # Load default config and override config from an environment variable
 app.config.update(dict(
 	DATABASE=os.path.join(app.root_path, 'hflaskr.db'),
-	SECRET_KEY='123456',
-	USERNAME='admin',
-	PASSWORD='password'
+	SECRET_KEY='\x00\xd8h(Z\x17\x8d\xb5\x97l\x88x0\xf2\xb3\xdcfU\xdb\x1f\x8d\x0b\xafk',
+	USERNAME='hehao',
+	PASSWORD='bfb129172dd48786cd30a212c976a33dcaf83ad6'
 	)
 )
 app.config.from_envvar('HFLASKR_SETTINGS', silent=True)
@@ -53,7 +56,7 @@ def initdb_command():
 @app.route('/')
 def show_entries():
 	db = get_db()
-	cur = db.execute('select title, text from entries order by id desc')
+	cur = db.execute('select title, date, text from entries order by id desc')
 	entries = cur.fetchall()
 	return render_template('show_entries.html', entries=entries)
 
@@ -62,8 +65,10 @@ def show_entries():
 def add_entry():
 		if not session.get('logged_in'):
 			abort(401)
+		# generate timestamp
+		submit_time = str(datetime.now().strftime("%A, %d.%B %Y %I:%M%p"))
 		db = get_db()
-		db.execute('insert into entries (title, text) values (?, ?)', [request.form['title'], request.form['text']])
+		db.execute('insert into entries (title, date, text) values (?, ?, ?)', [request.form['title'], submit_time, request.form['text']])
 		db.commit()
 		flash('New entry was successfully posted.')
 		return redirect(url_for('show_entries'))
@@ -73,9 +78,14 @@ def add_entry():
 def login():
 	error = None
 	if request.method == 'POST':
+		# generate sha1 value from user enter
+		sha1 = hashlib.sha1()
+		sha1.update(request.form['password'].encode('utf-8'))
+		enter_password = sha1.hexdigest()
+		# authorization check
 		if request.form['username'] != app.config['USERNAME']:
 			error = 'Invalid username'
-		elif request.form['password'] != app.config['PASSWORD']:
+		elif enter_password != app.config['PASSWORD']:
 			error = 'Invalid password'
 		else:
 			session['logged_in'] = True
